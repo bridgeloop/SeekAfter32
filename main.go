@@ -1,15 +1,15 @@
-package SeekAfter31
+package SeekAfter32
 
 import (
 	"bufio"
 	"errors"
 )
 
-var BadLen = errors.New("len(bytes) > 31")
+var BadLen = errors.New("len(bytes) > 32")
 
-func SeekAfter31(br *bufio.Reader, bytes []byte) error {
+func SeekAfter32(br *bufio.Reader, bytes []byte) error {
 	sz := len(bytes)
-	if sz > 31 {
+	if sz > 32 {
 		return BadLen
 	}
 	if sz == 0 {
@@ -17,6 +17,7 @@ func SeekAfter31(br *bufio.Reader, bytes []byte) error {
 	}
 
 	cache := make([]uint32, 256)
+	in_cache := [4]uint64 { 0, 0, 0, 0 }
 
 	matchers := ^uint32(0)
 	for {
@@ -27,9 +28,13 @@ func SeekAfter31(br *bufio.Reader, bytes []byte) error {
 
 		matchers <<= 1
 
-		v := &cache[b]
-		if *v&(1<<31) == 0 {
-			*v = uint32(1 << 31)
+		v := &(cache[b])
+
+		in_idx := (b & 0b11000000) >> 6
+		in_bit := uint64(1) << (b & 0b00111111)
+
+		if (in_cache[in_idx] & in_bit) == 0 {
+			in_cache[in_idx] |= in_bit
 			for it, by := range bytes {
 				if by != b {
 					*v |= 1 << it
@@ -40,7 +45,7 @@ func SeekAfter31(br *bufio.Reader, bytes []byte) error {
 		// set each bit in matchers where bytes[Pos(bit)] != b
 		matchers |= *v
 
-		if matchers&(1<<(sz-1)) == 0 {
+		if matchers & (1 << (sz - 1)) == 0 {
 			return nil
 		}
 	}

@@ -1,4 +1,4 @@
-package SeekAfter31
+package SeekAfter32
 
 import (
 	"bufio"
@@ -25,16 +25,27 @@ func reader(str string) *bufio.Reader {
 func TestEmpty(t *testing.T) {
 	s := "hiii :3"
 	r := reader(s)
-	if SeekAfter31(r, []byte("")) != nil {
+	if SeekAfter32(r, []byte("")) != nil {
 		t.Fatal("unexpected error")
 	}
 	if !compareReader(r, []byte(s)) {
 		t.Fatal("unexpected reader output")
 	}
 }
-func TestTooLong(t *testing.T) {
+func TestLong(t *testing.T) {
 	str := strings.Repeat("a", 32)
-	err := SeekAfter31(reader(str), []byte(str))
+	r := reader(str + "b")
+	err := SeekAfter32(r, []byte(str))
+	if err != nil {
+		t.Fatal("unexpected error")
+	}
+	if !compareReader(r, []byte("b")) {
+		t.Fatal("unexpected reader output")
+	}
+}
+func TestTooLong(t *testing.T) {
+	str := strings.Repeat("a", 33)
+	err := SeekAfter32(reader(str), []byte(str))
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -44,7 +55,7 @@ func TestTooLong(t *testing.T) {
 }
 func TestEOF(t *testing.T) {
 	r := reader("abc")
-	err := SeekAfter31(r, []byte("abcd"))
+	err := SeekAfter32(r, []byte("abcd"))
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -56,7 +67,7 @@ func TestNormal(t *testing.T) {
 	upper := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	after := "fghjklzxcvbnm"
 	r := reader(strings.Join([]string{"qwertyuiopasd", after}, upper))
-	err := SeekAfter31(r, []byte(upper))
+	err := SeekAfter32(r, []byte(upper))
 	if err != nil {
 		t.Fatal("unexpected error")
 	}
@@ -66,7 +77,7 @@ func TestNormal(t *testing.T) {
 }
 func TestInsidePartialMatch(t *testing.T) {
 	r := reader("aaab aab")
-	err := SeekAfter31(r, []byte("aab"))
+	err := SeekAfter32(r, []byte("aab"))
 	if err != nil {
 		t.Fatal("unexpected error", err)
 	}
